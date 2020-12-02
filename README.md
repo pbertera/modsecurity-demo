@@ -49,7 +49,7 @@ $ oc get route modsecurity
 
 5. start the demo
 ```
-$ export URL=http://$(oc get route modsecurity -o jsonpath='{.spec.host})
+$ export URL=http://$(oc get route modsecurity -o jsonpath='{.spec.host}')
 $ ./cases.sh
 ```
 
