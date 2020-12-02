@@ -1,0 +1,202 @@
+apiVersion: v1
+data:
+  Soap: |
+    <?xml version="1.0"?>
+
+    <soap:Envelope
+    xmlns:soap="http://www.w3.org/2003/05/soap-envelope/"
+    soap:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+
+    <soap:Body xmlns:m="http://www.example.org/stock">
+      <m:GetStockPriceResponse>
+        <m:Price>34.5</m:Price>
+      </m:GetStockPriceResponse>
+    </soap:Body>
+
+    </soap:Envelope>
+  api: |
+    {
+      "result": "200",
+      "info": "Request received"
+    }
+  page: |
+    Hello World
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: www-data
+---
+apiVersion: v1
+data:
+  modsecurity_localrules.conf: |
+    # Enable JSON request body parser.
+    SecRule REQUEST_HEADERS:Content-Type "application/json" "id:'300001',phase:1,t:none,t:lowercase,pass,nolog,ctl:requestBodyProcessor=JSON"
+    SecRule ARGS_NAMES "!^(attribute1|attribute2|attribute3|user_key|user)$" "phase:2, t:none, deny,log, auditlog,msg:'Invalid JSON format',id:1233"
+
+    # Enable XML schema check
+    SecXmlExternalEntity On
+    SecRule REQUEST_HEADERS:Content-Type "(?:application(?:/soap\+|/)|text/)xml" "id:'500008',phase:1,t:none,t:lowercase,pass,nolog,ctl:requestBodyProcessor=XML"
+    # SecRule REQBODY_PROCESSOR "!^XML\$" nolog,pass,skipAfter:12345,id:500009
+    SecRule XML "@validateSchema /etc/httpd/conf.d/soap-envelope.xsd" "id:500010 phase:2,deny,log,auditlog,id:12345"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: custom-rules
+---
+apiVersion: v1
+data:
+  soap-envelope.xsd: "<?xml version='1.0' encoding='UTF-8' ?>\r\n\r\n<!-- Schema for
+    the SOAP/1.1 envelope\r\n\r\nPortions © 2001 DevelopMentor. \r\n© 2001 W3C (Massachusetts
+    Institute of Technology, Institut National de Recherche en Informatique et en
+    Automatique, Keio University). All Rights Reserved.  \r\n \r\nThis document is
+    governed by the W3C Software License [1] as described in the FAQ [2].\r\n[1] http://www.w3.org/Consortium/Legal/copyright-software-19980720\r\n[2]
+    http://www.w3.org/Consortium/Legal/IPR-FAQ-20000620.html#DTD \r\nBy obtaining,
+    using and/or copying this work, you (the licensee) agree that you have read, understood,
+    and will comply with the following terms and conditions:\r\n\r\nPermission to
+    use, copy, modify, and distribute this software and its documentation, with or
+    without modification,  for any purpose and without fee or royalty is hereby granted,
+    provided that you include the following on ALL copies of the software and documentation
+    or portions thereof, including modifications, that you make:\r\n\r\n1.  The full
+    text of this NOTICE in a location viewable to users of the redistributed or derivative
+    work. \r\n\r\n2.  Any pre-existing intellectual property disclaimers, notices,
+    or terms and conditions. If none exist, a short notice of the following form (hypertext
+    is preferred, text is permitted) should be used within the body of any redistributed
+    or derivative code: \"Copyright © 2001 World Wide Web Consortium, (Massachusetts
+    Institute of Technology, Institut National de Recherche en Informatique et en
+    Automatique, Keio University). All Rights Reserved. http://www.w3.org/Consortium/Legal/\"
+    \r\n\r\n3.  Notice of any changes or modifications to the W3C files, including
+    the date changes were made. (We recommend you provide URIs to the location from
+    which the code is derived.)   \r\n\r\nOriginal W3C files; http://www.w3.org/2001/06/soap-envelope\r\nChanges
+    made: \r\n     - reverted namespace to http://schemas.xmlsoap.org/soap/envelope/\r\n
+    \    - reverted mustUnderstand to only allow 0 and 1 as lexical values\r\n\t -
+    made encodingStyle a global attribute 20020825\r\n\t - removed default value from
+    mustUnderstand attribute declaration\r\n\r\nTHIS SOFTWARE AND DOCUMENTATION IS
+    PROVIDED \"AS IS,\" AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR WARRANTIES,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY
+    OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE SOFTWARE OR DOCUMENTATION
+    WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS.\r\n\r\nCOPYRIGHT
+    HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR CONSEQUENTIAL
+    DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENTATION.\r\n\r\nThe name
+    and trademarks of copyright holders may NOT be used in advertising or publicity
+    pertaining to the software without specific, written prior permission. Title to
+    copyright in this software and any associated documentation will at all times
+    remain with copyright holders.\r\n\r\n-->\r\n<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"\r\n
+    \          xmlns:tns=\"http://schemas.xmlsoap.org/soap/envelope/\"\r\n           targetNamespace=\"http://schemas.xmlsoap.org/soap/envelope/\"
+    >\r\n\r\n     \r\n  <!-- Envelope, header and body -->\r\n  <xs:element name=\"Envelope\"
+    type=\"tns:Envelope\" />\r\n  <xs:complexType name=\"Envelope\" >\r\n    <xs:sequence>\r\n
+    \     <xs:element ref=\"tns:Header\" minOccurs=\"0\" />\r\n      <xs:element ref=\"tns:Body\"
+    minOccurs=\"1\" />\r\n      <xs:any namespace=\"##other\" minOccurs=\"0\" maxOccurs=\"unbounded\"
+    processContents=\"lax\" />\r\n    </xs:sequence>\r\n    <xs:anyAttribute namespace=\"##other\"
+    processContents=\"lax\" />\r\n  </xs:complexType>\r\n\r\n  <xs:element name=\"Header\"
+    type=\"tns:Header\" />\r\n  <xs:complexType name=\"Header\" >\r\n    <xs:sequence>\r\n
+    \     <xs:any namespace=\"##other\" minOccurs=\"0\" maxOccurs=\"unbounded\" processContents=\"lax\"
+    />\r\n    </xs:sequence>\r\n    <xs:anyAttribute namespace=\"##other\" processContents=\"lax\"
+    />\r\n  </xs:complexType>\r\n  \r\n  <xs:element name=\"Body\" type=\"tns:Body\"
+    />\r\n  <xs:complexType name=\"Body\" >\r\n    <xs:sequence>\r\n      <xs:any
+    namespace=\"##any\" minOccurs=\"0\" maxOccurs=\"unbounded\" processContents=\"lax\"
+    />\r\n    </xs:sequence>\r\n    <xs:anyAttribute namespace=\"##any\" processContents=\"lax\"
+    >\r\n\t  <xs:annotation>\r\n\t    <xs:documentation>\r\n\t\t  Prose in the spec
+    does not specify that attributes are allowed on the Body element\r\n\t\t</xs:documentation>\r\n\t
+    \ </xs:annotation>\r\n\t</xs:anyAttribute>\r\n  </xs:complexType>\r\n\r\n       \r\n
+    \ <!-- Global Attributes.  The following attributes are intended to be usable
+    via qualified attribute names on any complex type referencing them.  -->\r\n  <xs:attribute
+    name=\"mustUnderstand\" >\t\r\n     <xs:simpleType>\r\n     <xs:restriction base='xs:boolean'>\r\n\t
+    \  <xs:pattern value='0|1' />\r\n\t </xs:restriction>\r\n   </xs:simpleType>\r\n
+    \ </xs:attribute>\r\n  <xs:attribute name=\"actor\" type=\"xs:anyURI\" />\r\n\r\n
+    \ <xs:simpleType name=\"encodingStyle\" >\r\n    <xs:annotation>\r\n\t  <xs:documentation>\r\n\t
+    \   'encodingStyle' indicates any canonicalization conventions followed in the
+    contents of the containing element.  For example, the value 'http://schemas.xmlsoap.org/soap/encoding/'
+    indicates the pattern described in SOAP specification\r\n\t  </xs:documentation>\r\n\t</xs:annotation>\r\n
+    \   <xs:list itemType=\"xs:anyURI\" />\r\n  </xs:simpleType>\r\n\r\n  <xs:attribute
+    name=\"encodingStyle\" type=\"tns:encodingStyle\" />\r\n  <xs:attributeGroup name=\"encodingStyle\"
+    >\r\n    <xs:attribute ref=\"tns:encodingStyle\" />\r\n  </xs:attributeGroup>\r\n\r\n
+    \ <xs:element name=\"Fault\" type=\"tns:Fault\" />\r\n  <xs:complexType name=\"Fault\"
+    final=\"extension\" >\r\n    <xs:annotation>\r\n\t  <xs:documentation>\r\n\t    Fault
+    reporting structure\r\n\t  </xs:documentation>\r\n\t</xs:annotation>\r\n    <xs:sequence>\r\n
+    \     <xs:element name=\"faultcode\" type=\"xs:QName\" />\r\n      <xs:element
+    name=\"faultstring\" type=\"xs:string\" />\r\n      <xs:element name=\"faultactor\"
+    type=\"xs:anyURI\" minOccurs=\"0\" />\r\n      <xs:element name=\"detail\" type=\"tns:detail\"
+    minOccurs=\"0\" />      \r\n    </xs:sequence>\r\n  </xs:complexType>\r\n\r\n
+    \ <xs:complexType name=\"detail\">\r\n    <xs:sequence>\r\n      <xs:any namespace=\"##any\"
+    minOccurs=\"0\" maxOccurs=\"unbounded\" processContents=\"lax\" />\r\n    </xs:sequence>\r\n
+    \   <xs:anyAttribute namespace=\"##any\" processContents=\"lax\" /> \r\n  </xs:complexType>\r\n\r\n</xs:schema>\r\n\r\n\r\n\r\n\r\n\r\n\r\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: conf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modsecurity
+  labels:
+    app: modsecurity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modsecurity
+  template:
+    metadata:
+      labels:
+        app: modsecurity
+    spec:
+      volumes:
+      - name: www-data
+        configMap:
+          name: www-data
+      - name: custom-rules
+        configMap:
+          name: custom-rules
+          items:
+          - key: modsecurity_localrules.conf
+            path: modsecurity_localrules.conf
+      - name: soap-envelope
+        configMap:
+          name: conf
+          items:
+          - key: soap-envelope.xsd
+            path: soap-envelope.xsd
+      containers:
+      - name: modsecurity
+        image: quay.io/pbertera/httpd-mod-sec
+        volumeMounts:
+        - name: soap-envelope
+          readOnly: true
+          mountPath: /etc/httpd/conf.d/soap-envelope.xsd
+        - name: custom-rules
+          readOnly: true
+          mountPath: /etc/httpd/modsecurity.d/local_rules/ #modsecurity_localrules.conf
+          #subPath: modsecurity_localrules.conf
+        - name: www-data
+          readOnly: true
+          mountPath: /var/www/html/
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: modsecurity
+spec:
+  selector:
+    app: modsecurity
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  name: modsecurity
+spec:
+  host: ""
+  port:
+    targetPort: 8080
+  to:
+    kind: ""
+    name: modsecurity
+    weight: null
+
