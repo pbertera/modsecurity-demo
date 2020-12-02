@@ -52,3 +52,5 @@ $ oc get route modsecurity
 $ export URL=http://$(oc get route modsecurity -o jsonpath='{.spec.host})
 $ ./cases.sh
 ```
+
+[![asciicast](https://asciinema.org/a/Wdxs7vUE8Z9uOYH5FYGxXgfUQ.svg)](https://asciinema.org/a/Wdxs7vUE8Z9uOYH5FYGxXgfUQ)
