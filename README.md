@@ -1,4 +1,4 @@
-#Apache Mod Security demo
+# Apache Mod Security demo
 
 ## Deployment on local container engine (podman)
 
@@ -49,6 +49,6 @@ $ oc get route modsecurity
 
 5. start the demo
 ```
-$ export URL=$(oc get route modsecurity -o jsonpath='{.spec.host})
+$ export URL=http://$(oc get route modsecurity -o jsonpath='{.spec.host})
 $ ./cases.sh
 ```

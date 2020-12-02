@@ -1,7 +1,6 @@
 #!/bin/bash 
-. demo.sh
+. ./demo.sh/demo.sh
 
-URL=modsecurity-modsecurity.apps.pbroutes.lab.pnq2.cee.redhat.com
 URL=${URL-http://localhost:8080}
 
 clear
