@@ -164,6 +164,7 @@ spec:
         - name: soap-envelope
           readOnly: true
           mountPath: /etc/httpd/conf.d/soap-envelope.xsd
+          subPath: soap-envelope.xsd
         - name: custom-rules
           readOnly: true
           mountPath: /etc/httpd/modsecurity.d/local_rules/ #modsecurity_localrules.conf
