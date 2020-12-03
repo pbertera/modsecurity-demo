@@ -4,7 +4,7 @@
 
 1. clone this repo:
 ```
-$ git clone 
+$ git clone --recurse-submodules https://github.com/pbertera/modsecurity-demo.git
 $ cd modsecurity-demo
 ```
 
@@ -28,7 +28,7 @@ $ ./cases
 
 1. clone this repo:
 ```
-$ git clone 
+$ git clone --recurse-submodules https://github.com/pbertera/modsecurity-demo.git 
 $ cd modsecurity-demo
 ```
 2. create a namespace
